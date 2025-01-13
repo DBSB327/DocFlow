@@ -2,6 +2,7 @@ package com.neoskat.docflow.service;
 
 import com.neoskat.docflow.controller.model.LoginBody;
 import com.neoskat.docflow.controller.model.RegisterBody;
+import com.neoskat.docflow.enums.Role;
 import com.neoskat.docflow.model.User;
 import com.neoskat.docflow.repository.UserRepository;
 import com.neoskat.docflow.security.EncryptionService;
@@ -19,6 +20,7 @@ public class UserService {
     private final JWTService jwtService;
 
     public Optional<User> getUserById(Long id) {
+
         return userRepository.getUserById(id);
     }
 
@@ -32,6 +34,7 @@ public class UserService {
         user.setEmail(registerBody.getEmail());
         user.setPhoneNumber(registerBody.getPhoneNumber());
         user.setPassword(encryptionService.encryptPassword(registerBody.getPassword()));
+        user.setRole(registerBody.getRole());
         return userRepository.save(user);
     }
 
@@ -44,6 +47,28 @@ public class UserService {
             }
         }
         return null;
+    }
+
+    public void deleteUserById(Long id) {
+        try {
+            userRepository.deleteById(id);
+        } catch (Exception e) {
+            throw new RuntimeException("Error deleting user");
+        }
+    }
+
+    public void changeUserRole(Long id, Role newRole) throws Exception {
+        User user = userRepository.findById(id).
+                orElseThrow(() -> new Exception("User not found"));
+
+        if (newRole == Role.SUPER_ADMIN) {
+            int superAdminCount = userRepository.countByRole(Role.SUPER_ADMIN);
+            if(superAdminCount > 0 && user.getRole() != Role.SUPER_ADMIN){
+                throw new Exception("Super admin already exist");
+            }
+        }
+        user.setRole(newRole);
+        userRepository.save(user);
     }
 }
 

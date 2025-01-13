@@ -1,5 +1,6 @@
 package com.neoskat.docflow.model;
 
+import com.neoskat.docflow.enums.Role;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -20,4 +21,7 @@ public class User {
     private String phoneNumber;
     @Column(name = "password")
     private String password;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "role", nullable = false)
+    private Role role;
 }

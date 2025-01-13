@@ -23,6 +23,7 @@ public class JWTService{
     private int expiryInSeconds;
     private Algorithm algorithm;
     private static final String USERNAME_KEY = "USERNAME";
+    private static final String ROLE_KEY = "role";
     @PostConstruct
     public void postConstruct(){
         algorithm = Algorithm.HMAC256(algorithmKey);
@@ -31,6 +32,7 @@ public class JWTService{
     public String generateJWT(User user){
         return JWT.create()
                 .withClaim("USERNAME", user.getEmail())
+                .withClaim(ROLE_KEY, "ROLE_" + user.getRole().name())
                 .withExpiresAt(new Date(System.currentTimeMillis() + (1000 * expiryInSeconds)))
                 .withIssuer(issuer)
                 .sign(algorithm);
@@ -43,6 +45,18 @@ public class JWTService{
                     .build()
                     .verify(token)
                     .getClaim(USERNAME_KEY)
+                    .asString();
+        } catch (JWTVerificationException ex) {
+            throw new JWTDecodeException("Invalid or expired token", ex);
+        }
+    }
+    public String getRole(String token) {
+        try {
+            return JWT.require(algorithm)
+                    .withIssuer(issuer)
+                    .build()
+                    .verify(token)
+                    .getClaim(ROLE_KEY)
                     .asString();
         } catch (JWTVerificationException ex) {
             throw new JWTDecodeException("Invalid or expired token", ex);
